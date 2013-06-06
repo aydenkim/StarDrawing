@@ -218,7 +218,7 @@ public class MathSketchGUI extends JFrame {
 		this.setLocationRelativeTo(null);
 
 		this.setMinimumSize(new Dimension(300, 300));
-		this.setTitle("KimCHI");
+		this.setTitle("KimCHI"); 
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.pack();
 
