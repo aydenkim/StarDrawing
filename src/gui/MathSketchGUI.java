@@ -146,6 +146,7 @@ public class MathSketchGUI extends JFrame {
 			
 					try {
 						agent.retrieveNextQuestion();
+						sketchControl.clearSketch(); // clear the sketch
 					} catch (WriteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
