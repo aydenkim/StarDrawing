@@ -943,7 +943,7 @@ IRecognizer<Sketch, IRecognitionResult> {
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(
-					new FileReader("/Users/skycris/Dropbox/childrenRecognizer/data/ToddlerAnd7.arff"));
+					new FileReader("data/ToddlerAnd7.arff"));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

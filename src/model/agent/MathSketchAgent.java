@@ -232,7 +232,7 @@ public class MathSketchAgent implements ISketchObserver {
 
 			currentState.setCurrentQuestion(currentQuestion);
 			gui.getQuestionPanel().setCurrentQuestion(currentQuestion);
-			gui.getInstructionPanel().setCurrentQuestion(currentQuestion);
+			//gui.getInstructionPanel().setCurrentQuestion(currentQuestion);
 
 			answerChecker.setCurrentQuestion(currentQuestion);
 		}
