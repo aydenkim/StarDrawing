@@ -42,14 +42,17 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
+import edu.tamu.core.sketch.Sketch;
+
 public class Question {
 
-	
+
 	private int questionUID;
 	private String expectedShapeName;
 	private List<ImageIcon> images = new ArrayList<ImageIcon>();
 	private List<String> textInstructions;
 	private List<String> helpInstructions;
+	private Sketch definedSketch; // defined sketch for following
 
 	public int getQuestionUID() {
 		return questionUID;
@@ -66,6 +69,14 @@ public class Question {
 	public void setExpectedShapeName(String expectedShapeName) {
 		this.expectedShapeName = expectedShapeName;
 	}
+
+	public Sketch getDefinedSketch(){
+		return  definedSketch;
+	}
+
+    public void setDefinedSketch(Sketch sketch){
+    	definedSketch = sketch;
+    }
 
 	@Override
 	public boolean equals(Object o) {
@@ -137,11 +148,11 @@ public class Question {
 	public void setTextInstructions(List<String> textInstructions) {
 		this.textInstructions = textInstructions;
 	}
-	
+
 	public void setHelpInstructions(List<String> helpInstructions){
 		this.helpInstructions = helpInstructions;
 	}
-	
+
 	public String getHelpInstructions(int helpLevel) {
 		if (helpLevel < helpInstructions.size())
 			return helpInstructions.get(helpLevel);

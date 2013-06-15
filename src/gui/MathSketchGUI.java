@@ -145,8 +145,9 @@ public class MathSketchGUI extends JFrame {
 				System.out.println("open");
 			
 					try {
-						agent.retrieveNextQuestion();
+						
 						sketchControl.clearSketch(); // clear the sketch
+						agent.retrieveNextQuestion();
 					} catch (WriteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -236,6 +237,10 @@ public class MathSketchGUI extends JFrame {
 
 	public MathSketchController getSketchController() {
 		return sketchControl;
+	}
+	
+	public JSketchCanvas getSketchCanvas(){
+		return sketchCanvas;
 	}
 
 	/**

@@ -39,6 +39,7 @@ package gui;
 
 import java.awt.List;
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -47,8 +48,14 @@ import java.util.Stack;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.xml.parsers.ParserConfigurationException;
 
+import model.Question;
+
+import org.ladder.io.DOMInput;
+import org.ladder.io.UnknownSketchFileTypeException;
 import org.ladder.io.XMLFileFilter;
+import org.xml.sax.SAXException;
 
 import recognition.MathSketchRecognizer;
 
@@ -57,6 +64,7 @@ import edu.tamu.core.gui.ISketchObserver;
 import edu.tamu.core.gui.JSketchCanvas;
 import edu.tamu.core.gui.SaveAskDialog;
 import edu.tamu.core.sketch.Point;
+import edu.tamu.core.sketch.STranslationScope;
 import edu.tamu.core.sketch.Sketch;
 import edu.tamu.core.sketch.Stroke;
 import ecologylab.serialization.SIMPLTranslationException;
@@ -78,6 +86,11 @@ public class MathSketchController implements ISketchController, ISketchObserver 
 
 	// other gui components
 	protected JFileChooser m_chooser = new JFileChooser();
+	
+	/**
+	 * Input file reader
+	 */
+	DOMInput m_input = new DOMInput();
 
 	public MathSketchController(JSketchCanvas sketchCanvas) {
 		this(sketchCanvas,null);
@@ -92,6 +105,10 @@ public class MathSketchController implements ISketchController, ISketchObserver 
 		// document name
 		m_sketchFile = null;
 
+	}
+	
+	public JSketchCanvas getSketchCanvas(){
+		return canvas;
 	}
 
 	@Override
@@ -202,6 +219,7 @@ public class MathSketchController implements ISketchController, ISketchObserver 
 	protected void resaveSketch() {
 
 		Sketch sketch = canvas.getSketch();
+		
 		if(sketch.getShapes().isEmpty()){
 			MathSketchRecognizer.runPaleo(sketch);
 		}
@@ -234,6 +252,9 @@ public class MathSketchController implements ISketchController, ISketchObserver 
 		m_sketchFile = f;
 		resaveSketch();
 	}
+	
+	
+
 
 	@Override
 	public void saveSketch() {
@@ -244,10 +265,24 @@ public class MathSketchController implements ISketchController, ISketchObserver 
 			saveSketchAs();
 	}
 
+	/**
+	 * Load the pre-defined sketch
+	 */
+	
 	@Override
 	public void loadSketch() {
-		// TODO Auto-generated method stub
-
+		File definedSketch = new File("config/predefinedSketch/star.xml");
+		System.out.println(definedSketch.canRead());
+		
+		Sketch defined = null;
+		try {
+			defined = Sketch.deserialize(definedSketch);
+			canvas.setSketch(defined);
+		} catch (SIMPLTranslationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 	}
 
 	@Override
@@ -259,6 +294,7 @@ public class MathSketchController implements ISketchController, ISketchObserver 
 
 	@Override
 	public void nextQuestion() {
+		this.clearSketch();
 		// TODO Auto-generated method stub
 		
 	}
