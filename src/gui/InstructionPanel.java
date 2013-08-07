@@ -100,9 +100,10 @@ InteractionObserver {
 		initializeGUI();
 
 	}
+	
+	
 
 	private void initializeGUI() {
-
 
 		Font insFont = new Font("Helvetica", Font.PLAIN, 14);
 
@@ -121,6 +122,7 @@ InteractionObserver {
 
 		this.add(instructions);
 		this.add(Box.createRigidArea(new Dimension(0, 10)));
+		setDefaultSet(true);
 
 
 	}
@@ -163,10 +165,18 @@ InteractionObserver {
 			temp_instructions[instructions_index++] = '>';
 			instructions.setText(new String(temp_instructions));
 		}
+		
 	}
 	
 	public JLabel getInstructions(){
 		return instructions;
+	}
+	
+	public void setDefaultSet(Boolean turnOn){
+		if(turnOn){
+			JPanel defaultPanel = new DefaultQuestionPanel();
+			//this.add(defaultPanel);
+		}
 	}
 	
 	public int Summarize(String filePath) throws IOException{

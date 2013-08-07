@@ -76,6 +76,7 @@ public class SketchToolbar extends JPanel implements ActionListener {
 		setLayout(new BorderLayout(30, 0));
 		
 		this.controller = controller;
+		//controller.loadSketch();
 		ImageIcon undoButtonIcon = new ImageIcon("img/icons/undo-icon.png");
 		btnUndoStroke = new JButton(undoButtonIcon);
 		btnUndoStroke.setToolTipText("Undo last stroke");
