@@ -31,8 +31,8 @@ public class StateManager {
 		// of a mess of ifs
 
 		AgentEmotionalState currentEmotion = currentState
-				.getTayoukiEmotionalState();
-		if (currentEmotion.equals(AgentEmotionalState.NEUTRAL)) {
+				.getEmotionalState();
+		/*if (currentEmotion.equals(AgentEmotionalState.NEUTRAL)) {
 			if (e.equals(EventType.TIMEOUT)) {
 				currentState
 						.setTayoukiEmotionalState(AgentEmotionalState.IMPATIENT);
@@ -121,7 +121,7 @@ public class StateManager {
 				currentState
 						.setTayoukiEmotionalState(AgentEmotionalState.CONFUSED);
 			}
-		}
+		}*/
 
 
 	}

@@ -95,7 +95,7 @@ InteractionObserver {
 
 	public InstructionPanel() {
 		super();
-		this.currentStatus = AgentEmotionalState.NEUTRAL;
+		this.currentStatus = AgentEmotionalState.START;
 
 		initializeGUI();
 

@@ -72,24 +72,24 @@ public class SpeechModule {
 	public void initializeSoundMaps(ExcelContents contents){
 		soundMap = new HashMap<String, String>();
 
-		
-		for (int i = 1; i < contents.cell1.size(); i++) {
-				soundMap.put(contents.cell1.get(i), SOUND_DIR
-						+ contents.cell5.get(i));
+
+		for (int i = 1; i < contents.cell2.size(); i++) {
+			soundMap.put(contents.cell2.get(i), SOUND_DIR
+					+ contents.cell4.get(i));
 		}
 
-		
+
 	}
-	
+
 	public void initializeQuestionMaps(ExcelContents contents){
 		questionSoundMap = new HashMap<Integer, String>();
 		questionTextMap = new HashMap<Integer, String>();
-		
+
 		for(int i = 1 ; i < contents.cell1.size(); i++){
 			questionSoundMap.put(i, SOUND_DIR + contents.cell3.get(i));
 			questionTextMap.put(i, contents.cell2.get(i));
 		}
-		
+
 	}
 	/**
 	 * Given a msgCode as defined in the constants in AgentResponse the agent
@@ -101,7 +101,7 @@ public class SpeechModule {
 	// TODO right now it is receiving an emotional state...is better to receive
 	// a specific msgCode
 	public void say(AudioState state, AgentEmotionalState msg, Question question) {
-	
+
 		if (questionSoundMap.containsKey(question.getQuestionUID())) {
 			InputStream in = null;
 			try {
@@ -130,6 +130,33 @@ public class SpeechModule {
 		}
 	}
 
+	public void say(String string){
+
+		if(soundMap.containsKey(string)){
+			InputStream in = null;
+			try {
+
+				in = new FileInputStream(soundMap.get(string));
+
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			}
+			// Create an AudioStream object from the input stream.
+			AudioStream as = null;
+			try {
+				as = new AudioStream(in);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			// Use the static class member "player" from class AudioPlayer to
+			// play
+			// clip.
+			AudioPlayer.player.start(as);
+
+		}
+
+	}
+
 	public void say(AudioState state, String msgId) {
 
 		if (soundMap.containsKey(msgId)) {
@@ -154,8 +181,8 @@ public class SpeechModule {
 			// clip.
 			AudioPlayer.player.start(as);
 		}
-		
-		
+
+
 	}
 
 }

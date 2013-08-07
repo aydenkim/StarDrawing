@@ -37,6 +37,7 @@
 
 package model.agent;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -61,6 +62,7 @@ import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
+import model.Answer;
 import model.AnswerChecker;
 import model.InteractionState;
 import model.MessageFamily;
@@ -70,9 +72,12 @@ import model.StateManager;
 import model.agent.ReadExcel.ExcelContents;
 import recognition.MathSketchRecognizer;
 import weka.classifiers.trees.J48;
+import ecologylab.serialization.SIMPLTranslationException;
 import edu.tamu.core.gui.ISketchObserver;
+import edu.tamu.core.sketch.Point;
 import edu.tamu.core.sketch.Shape;
 import edu.tamu.core.sketch.Sketch;
+import edu.tamu.core.sketch.Stroke;
 import edu.tamu.recognition.IRecognitionResult;
 import gui.MathSketchController;
 import gui.MathSketchGUI;
@@ -96,7 +101,7 @@ public class MathSketchAgent implements ISketchObserver {
 	// model that holds the interaction state with the user global for the
 	// program
 	private InteractionState currentState;
-	
+
 	// age and gender classifier
 	public J48 tree = new J48(); 
 
@@ -126,10 +131,10 @@ public class MathSketchAgent implements ISketchObserver {
 	// keep track of where we are in the question list
 	private int currentQuestionNumber = 0;
 
-	private int tryCount = 1;
-
 	private WriteExcel writeExcel;
 	private WritableSheet excelSheet;
+	public List<Answer> studentAnswers = new ArrayList<Answer>();
+
 	List<String> expectedShapes;
 	WorkbookSettings wbSettings;
 	WritableWorkbook workbook;
@@ -150,7 +155,7 @@ public class MathSketchAgent implements ISketchObserver {
 		initializeMessages();
 		initializeClassifier();
 	}
-	
+
 	public void initializeClassifier(){
 		try {
 			tree = recognizer.trainClassifier();
@@ -174,6 +179,7 @@ public class MathSketchAgent implements ISketchObserver {
 		try {
 			try {
 				loadQuestions();
+
 			} catch (WriteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -188,6 +194,10 @@ public class MathSketchAgent implements ISketchObserver {
 		return gui;
 	}
 
+	public int getCurrentQuestionNumber(){
+		return currentQuestionNumber;
+	}
+
 	/**
 	 * advance to next sequential question; loop back to 0 after last question.
 	 * @throws IOException 
@@ -196,42 +206,58 @@ public class MathSketchAgent implements ISketchObserver {
 	public void retrieveNextQuestion() throws WriteException, IOException {
 
 		currentQuestionNumber++;
+
+		/**
+		 * End of the session
+		 */
 		if (currentQuestionNumber >= questions.size()) { // if it has no more question, then finish.
 			ImageIcon finalIcon;
-			
+
 			gui.getQuestionPanel().setQuestionText("You finished the learning!");
 			gui.getInstructionPanel().getInstructions().setText("You finished the learning!");
-            gui.getSketchController().disableNextQuestion();
-			
-			
-			String filePath = CreateLoggingAnswers();
-			int score = gui.getInstructionPanel().Summarize(filePath);
-			
-			if(score < 20){
-				 finalIcon = new ImageIcon(
-					"img/icons/0.png");
-			}else if (score >= 20 && score < 40){
-				 finalIcon = new ImageIcon(
-					"img/icons/20.png");
-			}else if (score >= 40 && score < 60){
-				 finalIcon = new ImageIcon(
-					"img/icons/40.png");
-			}else if (score >= 60 && score < 80){
-				 finalIcon = new ImageIcon(
-					"img/icons/60.png");
-			}else{
-				finalIcon = new ImageIcon(
-				"img/icons/80.png");
-			}
-			gui.getQuestionPanel().getQuestionImagePanel().getImage().setIcon(finalIcon);
-			
-			
+			gui.getSketchController().disableNextQuestion();
+			finalIcon = new ImageIcon(
+					"hurray.jpeg");
 
+
+			gui.getQuestionPanel().getQuestionImagePanel().getImage().setIcon(finalIcon);
+			speechHelper.say("FINISH");
 		}else{ 
 			Question currentQuestion = questions.get(currentQuestionNumber);
 
 			currentState.setCurrentQuestion(currentQuestion);
 			gui.getQuestionPanel().setCurrentQuestion(currentQuestion);
+
+			if(currentQuestionNumber != 0){
+
+				Sketch definedSketch = currentQuestion.getDefinedSketch();
+
+
+				gui.getSketchController().getSketchCanvas().setSketch(currentQuestion.getDefinedSketch());
+				Sketch sketch = gui.getSketchController().getSketchCanvas().getSketch();
+				sketch.setColor(Color.RED);
+
+				gui.repaint();
+
+				/*List<Shape> shapes = sketch.getShapes();
+				List<Point> allPoints = new ArrayList<Point>();
+				for(Shape shape : shapes){
+					allPoints.addAll(shape.getPoints());
+				}
+
+				for(Point point : allPoints){
+					System.out.println(point.getTime());
+				}
+
+				sketch.clear();
+				Stroke definedStroke = new Stroke(allPoints);
+				definedStroke.setColor(Color.RED);
+				ArrayList<Stroke> strokes = new ArrayList<Stroke>();
+				strokes.add(definedStroke);
+
+				sketch.setStrokes(strokes);*/
+
+			}
 			//gui.getInstructionPanel().setCurrentQuestion(currentQuestion);
 
 			answerChecker.setCurrentQuestion(currentQuestion);
@@ -256,21 +282,6 @@ public class MathSketchAgent implements ISketchObserver {
 
 		public void run() {
 			System.out.println("Agent started...");
-
-			/*while (true) {
-
-				// There was something out there with the pen
-				if (penEvent) {
-					System.out.println("Pen event detected...");
-					//processPenEvent();
-					penEvent = false;
-				}
-
-				tCount = 0;
-
-			}*/
-
-
 		}
 
 	}
@@ -283,91 +294,27 @@ public class MathSketchAgent implements ISketchObserver {
 		} else {
 			// The user finished drawing lets attempt recognition
 			if (currentState.getUserSketch() != null) {
+
 				recognizer.submitForRecognition(currentState.getUserSketch()); 
 
-
-				//recognizer.recognize();
-				System.out.println("currentQuestionNumber = " + currentQuestionNumber + " tryCount = " + tryCount);
 				recognizer.setSketch(currentState.getUserSketch());
-				
-				
-		
-				Double resultLabel = 0.0;
-				
-				//IRecognitionResult result = recognizer.recognize(currentState.getUserSketch());
-				//answerChecker.setCurrentRecognitionResult(result);
-				
-				try {
-					resultLabel = recognizer.recognizeLabel(currentState.getUserSketch());
-					
-						
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+
+				Sketch temp = currentState.getUserSketch();
+
+				List<Stroke> strokes = temp.getStrokes();
+
+				/**
+				 * Measure student's drawing time
+				 */
+				Long time = (long) 0.0;
+				for(Stroke stroke : strokes){
+					time = time + stroke.getTime();
 				}
 
-				String feedbackTxt = null;
-				if(resultLabel == 0.0){
-					feedbackTxt = "Yay~!!You are learning!";
-					gui.getFeedbackPanel().displayResponse(feedbackTxt,
-							false);
-				}else{
-					feedbackTxt = "You are really good at this!";
-					gui.getFeedbackPanel().displayResponse(feedbackTxt,
-							true);
-				}
-				
-				
-				
-				/*
-				answerChecker.setCurrentRecognitionResult(result);
-				try {
-					answerChecker.checkAnswers();
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-
-				// process correct answer and reset Help Level to 0
-				if (answerChecker.isCorrect()) {
-					stateController
-					.processEvent(StateManager.EventType.CORRECT_ANSW);
-					currentState.setHelpLvl(0);
-
-					summaryMap.put(expectedShapes.get(currentQuestionNumber), tryCount);
-					//writeExcel.addNumber(excelSheet, currentQuestionNumber, 2, tryCount);
-
-					tryCount = 1;
-				} else{
-					stateController
-					.processEvent(StateManager.EventType.INCORRECT_ANSW);
-					tryCount++;
-				}
-				// currentState.incrementHelpLvl();
-
-				String msgId = messageController
-				.getAppropiateMessage(answerChecker.getResultMessage());
-
-				String feedbackTxt = messageController.translate(msgId,
-						answerChecker.getMessageParameters());
-
-				gui.getFeedbackPanel().displayResponse(feedbackTxt,
-						answerChecker.isCorrect());
-
-				// if answer is correct change question
-				if (answerChecker.isCorrect()) {
-					speechHelper.say(AudioState.FEEDBACK, msgId);
-
-					retrieveNextQuestion();
-					/*speechHelper.say(AudioState.QUESTION,
-							currentState.getTayoukiEmotionalState(),
-							currentState.getCurrentQuestion());*/
-					// clear sketch for the new question
-				/*	gui.getSketchController().clearSketch();
-
-				} else {
-					speechHelper.say(AudioState.FEEDBACK, msgId);
-				}
-			*/
+				Answer answer = new Answer(this.currentQuestionNumber);
+				answer.setTime(time);
+				answer.setSketch(currentState.getUserSketch());
+				this.studentAnswers.add(answer);
 
 			}
 		}
@@ -376,9 +323,6 @@ public class MathSketchAgent implements ISketchObserver {
 
 	private void processTimeout() {
 		stateController.processEvent(StateManager.EventType.TIMEOUT);
-		//if (currentState.getTimeoutCount() > 5)
-		//speechHelper.say(AudioState.FEEDBACK, messageController
-		//.getAppropiateMessage(MessageFamily.TIMEOUT));
 
 	}
 
@@ -425,6 +369,23 @@ public class MathSketchAgent implements ISketchObserver {
 				List<String> helpInstructions = new ArrayList<String>();
 				helpInstructions.add(contents.cell5.get(i));
 				question.setHelpInstructions(helpInstructions);
+
+				// load predefined sketch if the question is not an exercise
+				if(question.getQuestionUID() != 1){
+
+					File definedSketch = new File("config/predefinedSketch/star.xml");
+
+					Sketch defined = null;
+					try {
+						defined = Sketch.deserialize(definedSketch);
+					} catch (SIMPLTranslationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+
+					question.setDefinedSketch(defined);
+				}
+
 				questions.add(question);
 			}
 		}
@@ -433,6 +394,8 @@ public class MathSketchAgent implements ISketchObserver {
 		retrieveNextQuestion();
 
 	}
+
+
 
 	/**
 	 * Create a log
@@ -445,18 +408,18 @@ public class MathSketchAgent implements ISketchObserver {
 		wbSettings = new WorkbookSettings();
 
 		wbSettings.setLocale(new Locale("en", "EN"));
-		
+
 		DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-		   //get current date time with Date()
-		   Date date = new Date();
-		   
+		//get current date time with Date()
+		Date date = new Date();
+
 		Calendar cal = Calendar.getInstance();
 		dateFormat.format(cal.getTime());
-		
+
 		File testDataFolder = new File("output");	
 		String file_name = dateFormat.format(cal.getTime()).toString();
 		File file = new File(testDataFolder + "/" + file_name + ".xls");
-		
+
 		workbook = Workbook.createWorkbook(file, wbSettings);
 		workbook.createSheet("Report", 0);
 		excelSheet = workbook.getSheet(0);
@@ -465,25 +428,25 @@ public class MathSketchAgent implements ISketchObserver {
 		List<Integer> counts = new ArrayList<Integer>();
 
 		//Get Map in Set interface to get key and value
-        Set s= summaryMap.entrySet();
+		Set s= summaryMap.entrySet();
 
-        //Move next key and value of Map by iterator
-        Iterator it=s.iterator();
+		//Move next key and value of Map by iterator
+		Iterator it=s.iterator();
 
-        while(it.hasNext())
-        {
-            // key=value separator this by Map.Entry to get key and value
-            Map.Entry m =(Map.Entry)it.next();
+		while(it.hasNext())
+		{
+			// key=value separator this by Map.Entry to get key and value
+			Map.Entry m =(Map.Entry)it.next();
 
-            // getKey is used to get key of Map
-            String key=(String)m.getKey();
-            expectedShapes.add(key);
-            // getValue is used to get value of key in Map
-            Integer value=(Integer)m.getValue();
-            counts.add(value);
+			// getKey is used to get key of Map
+			String key=(String)m.getKey();
+			expectedShapes.add(key);
+			// getValue is used to get value of key in Map
+			Integer value=(Integer)m.getValue();
+			counts.add(value);
 
-        }
-        
+		}
+
 		for(int i = 1; i <= summaryMap.size(); i++){
 			writeExcel.addNumber(excelSheet, 0, i, i);
 			writeExcel.addLabel(excelSheet, 1, i, expectedShapes.get(i-1));
@@ -492,7 +455,7 @@ public class MathSketchAgent implements ISketchObserver {
 
 		workbook.write();
 		workbook.close();
-		
+
 		return file.getPath();
 	}
 
@@ -510,6 +473,19 @@ public class MathSketchAgent implements ISketchObserver {
 		isPenDown = true;
 		agentThread.penEvent = true;
 
+	}
+
+	public InteractionState getCurrentState(){
+		return currentState;
+	}
+
+	public SpeechModule getSpeechHelper(){
+		return speechHelper;
+	}
+
+
+	public MathSketchGUI getGUI(){
+		return gui;
 	}
 
 

@@ -19,7 +19,7 @@ public class InteractionState {
 	/**
 	 * Defines if the agent is currently happy, sad, angry or in other mood.
 	 */
-	private AgentEmotionalState tayoukiEmotionalState;
+	private AgentEmotionalState EmotionalState;
 
 	/**
 	 * The current question that is being asked to the user
@@ -55,7 +55,7 @@ public class InteractionState {
 		userSketch = null;
 		helpLvl = 0;		
 		timeoutCount = 0;
-		tayoukiEmotionalState = AgentEmotionalState.NEUTRAL;
+		EmotionalState = AgentEmotionalState.START;
 	}
 
 	public Question getCurrentQuestion() {
@@ -97,13 +97,13 @@ public class InteractionState {
 		this.timeoutCount = 0;
 	}
 
-	public AgentEmotionalState getTayoukiEmotionalState() {
-		return tayoukiEmotionalState;
+	public AgentEmotionalState getEmotionalState() {
+		return EmotionalState;
 	}
 
-	public void setTayoukiEmotionalState(
-			AgentEmotionalState tayoukiEmotionalState) {
-		this.tayoukiEmotionalState = tayoukiEmotionalState;
+	public void setEmotionalState(
+			AgentEmotionalState EmotionalState) {
+		this.EmotionalState = EmotionalState;
 		notifyObservers();
 	}
 	

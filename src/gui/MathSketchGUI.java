@@ -20,6 +20,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import jxl.write.WriteException;
 
 import model.InteractionState;
+import model.agent.AgentEmotionalState;
 import model.agent.MathSketchAgent;
 import ecologylab.serialization.SIMPLTranslationException;
 import edu.tamu.core.gui.BackgroundImagePanel;
@@ -139,26 +140,40 @@ public class MathSketchGUI extends JFrame {
 		JPanel workspacePanel = new JPanel(new BorderLayout());
 		sketchToolbar.add(feedbackPanel);
 		sketchToolbar.add(m_backgroundPanel);
-		
+
 		sketchToolbar.getNextButton().addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				System.out.println("open");
-			
-					try {
-						
+				try {
+					if(agent.getCurrentQuestionNumber() != 0){ // we will not check the test drawing
+
+						if(agent.getCurrentState().getUserSketch() != null){
+							agent.processPenEvent();
+							sketchControl.clearSketch(); // clear the sketch
+							agent.retrieveNextQuestion();
+							agent.getCurrentState().setEmotionalState(AgentEmotionalState.SUBMIT);
+							agent.getSpeechHelper().say("SUBMIT");
+							
+						}else{
+							agent.getGUI().getFeedbackPanel().displayResponse("Please draw something", false);	
+							agent.getCurrentState().setEmotionalState(AgentEmotionalState.NOTDONE);
+							agent.getSpeechHelper().say("NOTDONE");
+						}
+					}else{
 						sketchControl.clearSketch(); // clear the sketch
 						agent.retrieveNextQuestion();
-					} catch (WriteException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					}
-				
+
+				} catch (WriteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
 			}
 		});
-		
+
 		sketchToolbar.getPlayButton().addActionListener(new ActionListener(){
 
 			@Override
@@ -166,7 +181,7 @@ public class MathSketchGUI extends JFrame {
 				// TODO Auto-generated method stub
 				sketchControl.playSketch();
 			}
-			
+
 		});
 
 		sketchToolbar.getCheckButton().addActionListener(
@@ -184,13 +199,13 @@ public class MathSketchGUI extends JFrame {
 					}
 				});
 
-        sketchToolbar.getSaveButton().addActionListener(
+		sketchToolbar.getSaveButton().addActionListener(
 				new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
 						sketchControl.saveSketchAs();
 					}
 				});
-		
+
 		navigationPanel = new JPanel(new BorderLayout());
 		navigationPanel.setOpaque(false);
 		navigationPanel.add(questionPanel,BorderLayout.LINE_START);
@@ -238,7 +253,7 @@ public class MathSketchGUI extends JFrame {
 	public MathSketchController getSketchController() {
 		return sketchControl;
 	}
-	
+
 	public JSketchCanvas getSketchCanvas(){
 		return sketchCanvas;
 	}
@@ -270,7 +285,7 @@ public class MathSketchGUI extends JFrame {
 	public InstructionPanel getInstructionPanel() {
 		return instructionPanel;
 	}
-	
+
 	public JPanel getNavigationPanel() {
 		return navigationPanel;
 	}

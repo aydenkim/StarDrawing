@@ -12,7 +12,7 @@ public class AgentResponse {
 
 	public AgentResponse() {
 		super();
-		this.emotion = AgentEmotionalState.NEUTRAL;
+		this.emotion = AgentEmotionalState.START;
 		this.message = "";
 		this.correctAnswer = false;
 	}

@@ -29,7 +29,7 @@ public class MessageManager {
 		// TODO Auto-generated method stub
 
 		ReadExcel excel = new ReadExcel();
-		excel.setInputFile("config/messages.xls");
+		excel.setInputFile("config/message1.xls");
 		try {
 			excel.read();
 		} catch (IOException e) {
@@ -41,12 +41,12 @@ public class MessageManager {
 		messageMap = new MessageMap();
 		for(int i = 1; i < contents.getCell1().size(); i++){	
 			messageMap.messageId.add(contents.getCell1().get(i));
-			messageMap.messageFamily.add(MessageFamily.valueOf(contents.getCell2().get(i)));
-			messageMap.emotion.add(AgentEmotionalState.valueOf(contents.getCell3().get(i)));
-			messageMap.txtMessage.add(contents.getCell4().get(i));
-			messageMap.audio.add(contents.getCell5().get(i));
+			messageMap.emotion.add(AgentEmotionalState.valueOf(contents.getCell2().get(i)));
+			messageMap.txtMessage.add(contents.getCell3().get(i));
+			messageMap.audio.add(contents.getCell4().get(i));
 		}
-
+        
+		System.out.println("Done");
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class MessageManager {
 	public String getAppropiateMessage(MessageFamily msgFamily) {
 		// TODO...
 		AgentEmotionalState currentEmotion = currentState
-				.getTayoukiEmotionalState();
+				.getEmotionalState();
 		
 		for(int i = 0; i < messageMap.emotion.size(); i++){
 			if(messageMap.emotion.get(i) == currentEmotion){
@@ -89,9 +89,7 @@ public class MessageManager {
 				return messageMap.txtMessage.get(i);
 			}
 		}
-		/*if (msgCode.equals(MessageFamily.CORRECT.toString())) {
-			return "Good job kid!";
-		}*/
+
 		return null;
 	}
 	
