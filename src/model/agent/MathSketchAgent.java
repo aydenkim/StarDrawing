@@ -54,6 +54,8 @@ import java.util.Set;
 
 import javax.swing.ImageIcon;
 
+import common.CSVWrite;
+
 import jxl.Workbook;
 import jxl.WorkbookSettings;
 import jxl.write.Number;
@@ -73,6 +75,8 @@ import model.agent.ReadExcel.ExcelContents;
 import recognition.MathSketchRecognizer;
 import weka.classifiers.trees.J48;
 import ecologylab.serialization.SIMPLTranslationException;
+import ecologylab.serialization.SimplTypesScope;
+import ecologylab.serialization.formatenums.Format;
 import edu.tamu.core.gui.ISketchObserver;
 import edu.tamu.core.sketch.Point;
 import edu.tamu.core.sketch.Shape;
@@ -139,7 +143,7 @@ public class MathSketchAgent implements ISketchObserver {
 	WorkbookSettings wbSettings;
 	WritableWorkbook workbook;
 
-	Map<String,Integer> summaryMap =new HashMap<String, Integer>();
+	Map<String,Long> summaryMap =new HashMap<String, Long>();
 
 	private AgentThread agentThread = null;
 	private boolean isPenDown = false;
@@ -209,19 +213,66 @@ public class MathSketchAgent implements ISketchObserver {
 
 		/**
 		 * End of the session
+		 * 
 		 */
 		if (currentQuestionNumber >= questions.size()) { // if it has no more question, then finish.
+			
+			/**
+			 * Just say it is finished
+			 */
 			ImageIcon finalIcon;
 
 			gui.getQuestionPanel().setQuestionText("You finished the learning!");
 			gui.getInstructionPanel().getInstructions().setText("You finished the learning!");
 			gui.getSketchController().disableNextQuestion();
 			finalIcon = new ImageIcon(
-					"hurray.jpeg");
+					QUESTION_IMG_FOLDER + "hurray.jpeg");
 
 
 			gui.getQuestionPanel().getQuestionImagePanel().getImage().setIcon(finalIcon);
 			speechHelper.say("FINISH");
+			gui.repaint();
+
+			/**
+			 * Saving a student's answer to a map
+			 */
+			for(int i = 0; i < studentAnswers.size(); i++){
+				summaryMap.put("QuestionNum"+i, studentAnswers.get(i).getTime());
+			}
+
+			// time difference between slow sketch and original sketch without limitation
+			summaryMap.put("TimeDifference", studentAnswers.get(2).getTime() - studentAnswers.get(0).getTime());
+
+			Calendar cal = Calendar.getInstance();	
+			DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+			String file_name = dateFormat.format(cal.getTime()).toString();
+			
+			/**
+			 * Create a specific folder for the user
+			 */
+			File file_dir = new File("savingData/" + file_name);
+			file_dir.mkdirs();
+			
+			CSVWrite.generateCsvFile(file_dir+ "/" + file_name+".csv" , summaryMap);
+
+			/**
+			 * Saving sketch files
+			 */
+			for(int i = 0; i < studentAnswers.size(); i++){
+
+				if(studentAnswers.get(i).getSketch().getShapes().isEmpty()){
+					MathSketchRecognizer.runPaleo(studentAnswers.get(i).getSketch());
+				}
+
+				try {
+					File m_sketchFile = new File(file_dir+ "/" + file_name + "_" + i + ".xml");
+					SimplTypesScope.serialize(studentAnswers.get(i).getSketch(), m_sketchFile, Format.XML);
+				} catch (SIMPLTranslationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
 		}else{ 
 			Question currentQuestion = questions.get(currentQuestionNumber);
 
@@ -307,13 +358,35 @@ public class MathSketchAgent implements ISketchObserver {
 				 * Measure student's drawing time
 				 */
 				Long time = (long) 0.0;
-				for(Stroke stroke : strokes){
-					time = time + stroke.getTime();
+
+
+				Long time1 = strokes.get(0).getPoints().get(0).getTime();
+				Long time2 = strokes.get(0).getPoints().get(strokes.get(0).getPoints().size()-1).getTime();
+
+				if(strokes.size() > 1){
+					Stroke stroke = strokes.get(strokes.size()-1);
+					time2 = stroke.getTime();
+
+				}
+				time = time2 - time1;
+
+				if(temp.getShapes().isEmpty()){
+					MathSketchRecognizer.runPaleo(temp);
+				}
+				
+				try {
+					File m_sketchFile = new File("savingData/"+ "test"  + ".xml");
+					SimplTypesScope.serialize(temp, m_sketchFile, Format.XML);
+				} catch (SIMPLTranslationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 
+				 
+				System.out.println("Drawing Time: " + time);
 				Answer answer = new Answer(this.currentQuestionNumber);
 				answer.setTime(time);
-				answer.setSketch(currentState.getUserSketch());
+				answer.setSketch(temp);
 				this.studentAnswers.add(answer);
 
 			}
@@ -423,9 +496,14 @@ public class MathSketchAgent implements ISketchObserver {
 		workbook = Workbook.createWorkbook(file, wbSettings);
 		workbook.createSheet("Report", 0);
 		excelSheet = workbook.getSheet(0);
-		writeExcel.createLabel(excelSheet, "ID", "Shape","Try");
+		writeExcel.createLabel(excelSheet, "ID", "Set","Time");
 		List<String> expectedShapes = new ArrayList<String>();
 		List<Integer> counts = new ArrayList<Integer>();
+
+		for(Answer answer : studentAnswers){
+
+			System.out.println("Answer Num: " + answer.getCurrentQuestionNumber() + "Time: " + answer.getTime());
+		}
 
 		//Get Map in Set interface to get key and value
 		Set s= summaryMap.entrySet();

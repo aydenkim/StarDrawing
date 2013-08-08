@@ -93,7 +93,7 @@ public class QuestionImagePanel extends JPanel {
 		titlePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		ImageIcon redoButtonIcon = new ImageIcon(
-				"img/questions/star.png");
+				"img/questions/pink-yellow-star-md.png");
 
 		image = new JLabel(redoButtonIcon);
 
