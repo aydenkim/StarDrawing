@@ -158,7 +158,7 @@ IRecognizer<Sketch, IRecognitionResult> {
 		//config.setSquareTestOn(true);
 		paleo = new PaleoSketchRecognizer(config);
 		directionManager = new DirectionManager();
-		initializeRecognizer();
+		//initializeRecognizer();
 	}
 
 
@@ -207,20 +207,7 @@ IRecognizer<Sketch, IRecognitionResult> {
 		sketch.removeAll(strokes);
 	}
 
-	public static void runPaleoForFeature(Sketch sketch, List<Shape> compare_shape) {
-		Stroke stroke = new Stroke();
-		for(Shape shape : compare_shape){
-			for(Point point : shape.getPoints()){
-				stroke.addPoint(point);
-			}
-		}
-		paleo.setStroke(stroke);
-		Shape best = paleo.recognize().getBestShape();
-
-		System.out.println("paleo says:\t " + best.getInterpretation());
-		prepareAndAdd(best, sketch, compare_shape);
-		sketch.remove(stroke);
-	}
+	
 	public static void runPaleo(Sketch sketch, List<Shape> compare_shape) {
 		// the bits we want to run through paleo
 
